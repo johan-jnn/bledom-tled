@@ -1,11 +1,12 @@
 <script lang="ts">
+  import { page } from "$app/state";
   import { invoke } from "@tauri-apps/api/core";
 
   const { children } = $props();
 </script>
 
-{#await invoke("device_init", { force: false })}
-  <div class="container">
+{#await invoke("device_init", { force: page.url.searchParams.has("force") })}
+  <div class="container pico">
     <h1>Fetching device...</h1>
     <p>Please wait while we're connecting to the led strip...</p>
     <div aria-busy="true"></div>
@@ -14,7 +15,7 @@
   {@render children()}
 {:catch err}
   {console.error(err)}
-  <div class="container">
+  <div class="container pico">
     <h1>Oups...</h1>
     <p>It seems that there is no device around you.</p>
     <h2>Did you made all the following steps ?</h2>

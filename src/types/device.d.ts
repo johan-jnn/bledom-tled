@@ -16,7 +16,7 @@ export interface Device {
    */
   effect?: number;
   /**
-   * Current effect speed if an effect is active
+   * Current effect speed if an effect is active (0-100)
    */
   effect_speed?: number;
   /**

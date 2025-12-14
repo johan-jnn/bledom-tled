@@ -5,6 +5,15 @@ pub struct BleDeviceManager {
 }
 
 impl BleDeviceManager {
+    /// Convert an u8 from [0-100] range to [0-255] range
+    pub fn from_0_100(num: u8) -> u8 {
+        ((num as u16 * u8::MAX as u16) / 100) as u8
+    }
+    /// Convert an u8 from [0-255] range to [0-100] range
+    pub fn to_0_100(num: u8) -> u8 {
+        ((num as u16 * 100) / u8::MAX as u16) as u8
+    }
+
     pub fn empty() -> Self {
         Self { device: None }
     }
@@ -14,6 +23,42 @@ impl BleDeviceManager {
             self.device = Some(BleLedDevice::new().await?);
         };
 
+        Ok(self)
+    }
+
+    pub async fn change_effect_settings(
+        &mut self,
+        effect: Option<u8>,
+        speed: Option<u8>,
+    ) -> Result<&mut Self, String> {
+        let device = self
+            .device
+            .as_mut()
+            .ok_or(String::from("Device not initialized."))?;
+
+        let mut issues_stack: [Option<String>; 2] = [None, None];
+        if let Some(e) = effect {
+            if device.set_effect(e).await.is_err() {
+                issues_stack[0] = Some(String::from("Failed to modify device's effect"));
+            };
+        }
+        if let Some(s) = speed {
+            if device.set_effect_speed(Self::to_0_100(s)).await.is_err() {
+                issues_stack[1] = Some(String::from("Failed to modify device's effect speed"))
+            }
+        }
+
+        let mut issue = String::new();
+        for issue_info in issues_stack.into_iter().flatten() {
+            if !issue.is_empty() {
+                issue.push_str(" and ");
+            }
+            issue.push_str(&issue_info);
+        }
+        if !issue.is_empty() {
+            issue.push('.');
+            return Err(issue);
+        }
         Ok(self)
     }
 
@@ -40,16 +85,16 @@ impl BleDeviceManager {
                 .await
                 .is_err()
         {
-            issues_stack[0] = Some(String::from("Failed to change device's color."));
+            issues_stack[0] = Some(String::from("Failed to change device's color"));
         };
 
         if a.is_some()
             && device
-                .set_brightness(a.unwrap_or(device.brightness))
+                .set_brightness(a.map(Self::to_0_100).unwrap_or(device.brightness))
                 .await
                 .is_err()
         {
-            issues_stack[1] = Some(String::from("Failed to change device's brighness."));
+            issues_stack[1] = Some(String::from("Failed to change device's brighness"));
         };
 
         let mut issue = String::new();
@@ -60,6 +105,7 @@ impl BleDeviceManager {
             issue.push_str(&issue_info);
         }
         if !issue.is_empty() {
+            issue.push('.');
             return Err(issue);
         }
 

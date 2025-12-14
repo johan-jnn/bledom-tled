@@ -10,7 +10,7 @@ pub struct ReadOnlyBleLedDevice {
     pub is_on: bool,
     /// Current RGB color (red, green, blue)
     pub rgb_color: (u8, u8, u8),
-    /// Current brightness (0-100)
+    /// Current brightness
     pub brightness: u8,
     /// Current effect mode if active
     pub effect: Option<u8>,
@@ -27,8 +27,8 @@ impl From<&BleLedDevice> for ReadOnlyBleLedDevice {
         Self {
             color_temp_kelvin: value.color_temp_kelvin,
             effect: value.effect,
-            brightness: value.brightness,
-            effect_speed: value.effect_speed,
+            brightness: BleDeviceManager::from_0_100(value.brightness),
+            effect_speed: value.effect_speed.map(BleDeviceManager::from_0_100),
             is_on: value.is_on,
             rgb_color: value.rgb_color,
             device_type_name: value.get_device_type_name().into(),
@@ -37,15 +37,7 @@ impl From<&BleLedDevice> for ReadOnlyBleLedDevice {
 }
 impl From<&mut BleLedDevice> for ReadOnlyBleLedDevice {
     fn from(value: &mut BleLedDevice) -> Self {
-        Self {
-            color_temp_kelvin: value.color_temp_kelvin,
-            effect: value.effect,
-            brightness: value.brightness,
-            effect_speed: value.effect_speed,
-            is_on: value.is_on,
-            rgb_color: value.rgb_color,
-            device_type_name: value.get_device_type_name().into(),
-        }
+        ReadOnlyBleLedDevice::from(&*value)
     }
 }
 impl TryFrom<&BleDeviceManager> for ReadOnlyBleLedDevice {
@@ -61,10 +53,6 @@ impl TryFrom<&BleDeviceManager> for ReadOnlyBleLedDevice {
 impl TryFrom<&mut BleDeviceManager> for ReadOnlyBleLedDevice {
     type Error = String;
     fn try_from(value: &mut BleDeviceManager) -> Result<Self, Self::Error> {
-        let Some(device) = &value.device else {
-            return Err(String::from("Device not initialized."));
-        };
-
-        Ok(device.into())
+        ReadOnlyBleLedDevice::try_from(&*value)
     }
 }

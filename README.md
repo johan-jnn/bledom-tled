@@ -9,7 +9,8 @@ A small Tauri application to control Bledom Leds from your computer
 - [x] Change color
 - [x] Change brighness
 - [x] Save led's status to storage (bledom leds are write-only)
-- [ ] Switch mode (fades, musics, ...)
+- [x] Effects mode
+- [ ] Music mode
 - [ ] Plugin system (via wasm)
 
 ## Installation

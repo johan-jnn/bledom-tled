@@ -2,7 +2,7 @@
   import { app } from "@tauri-apps/api";
 </script>
 
-<header>
+<header class="pico">
   <video
     src="/videos/neon_hearth_background.mp4"
     autoplay
@@ -20,7 +20,7 @@
   </h1>
   <a href="/app" role="button">Connect led strips</a>
 </header>
-<main class="container">
+<main class="container pico">
   <p>
     This application let you control BLEDOM-like led strips with your computer.
   </p>
@@ -53,6 +53,12 @@
         Light Strip Stock Videos by Vecteezy
       </a>
     </li>
+
+    <li>
+      <a href="https://flowbite-svelte.com/docs/components/tabs">
+        Flowbite's Tabs
+      </a>
+    </li>
   </ul>
 </main>
 
@@ -63,6 +69,10 @@
     place-content: center;
     position: relative;
     margin-top: 2em;
+
+    h1 {
+      color: white;
+    }
 
     > video {
       position: absolute;

@@ -19,7 +19,11 @@ pub async fn device_init(
         return Err("Initialization failed.".into());
     }
 
-    Ok(device_manager.device.as_ref().expect("Device initialization apparently failed.").into())
+    Ok(device_manager
+        .device
+        .as_ref()
+        .expect("Device initialization apparently failed.")
+        .into())
 }
 
 #[tauri::command]
@@ -76,6 +80,18 @@ pub async fn device_change_all(
 ) -> Result<ReadOnlyBleLedDevice, String> {
     let mut device_manager = manager.lock().await;
     device_manager.change_rgba(r, g, b, a).await?;
+
+    Ok(device_manager.device.as_ref().unwrap().into())
+}
+
+#[tauri::command]
+pub async fn device_set_effect(
+    manager: ManagerState<'_>,
+    effect: Option<u8>,
+    speed: Option<u8>,
+) -> Result<ReadOnlyBleLedDevice, String> {
+    let mut device_manager = manager.lock().await;
+    device_manager.change_effect_settings(effect, speed).await?;
 
     Ok(device_manager.device.as_ref().unwrap().into())
 }
