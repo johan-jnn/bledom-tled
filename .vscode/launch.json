@@ -1,0 +1,11 @@
+{
+  "configurations": [
+    {
+      "command": "bun tauri dev",
+      "name": "Run `bun tauri dev`",
+      "request": "launch",
+      "type": "node-terminal",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

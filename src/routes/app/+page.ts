@@ -4,6 +4,6 @@ import type { PageLoad } from "./$types";
 
 export const load: PageLoad = async () => {
   return {
-    device: await invoke<Device>("device_init", { force: false }),
+    device: await invoke<Device>("device_init", { force: false }).catch(() => null),
   };
 };
