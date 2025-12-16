@@ -8,14 +8,17 @@
   import { BuiltinEffects } from "../../types/builtin_effect";
   import type { Device } from "../../types/device.js";
 
-  // Clearing the "force query if any"
+  const DEVICE_LOCALSTORAGE_KEY = "device_save";
+
+  // Clearing the "force query if any" and delete the json saved data
   if (page.url.searchParams.has("force")) {
     page.url.searchParams.delete("force");
+    window.localStorage.removeItem(DEVICE_LOCALSTORAGE_KEY);
+
     replaceState(page.url, {});
   }
 
   const { data } = $props();
-  const DEVICE_LOCALSTORAGE_KEY = "device_save";
 
   let device = $state({
     _tab: "colors",
@@ -73,6 +76,7 @@
       JSON.stringify(device)
     );
   });
+  $inspect(device);
 </script>
 
 <form class="container">

@@ -1,9 +1,5 @@
+use crate::tled::device::serializer::ReadOnlyBleLedDevice;
 use elk_led_controller::{AudioMonitor, BleLedDevice, Error, VisualizationMode};
-
-use crate::tled::{
-    audio_visualisation::serializer::ReadOnlyAudioVisualization,
-    device::serializer::ReadOnlyBleLedDevice,
-};
 
 pub struct BleDeviceManager {
     pub device: Option<BleLedDevice>,
@@ -148,7 +144,9 @@ impl BleDeviceManager {
         }
         monitor.set_config(config);
 
-        monitor.start_continuous_monitoring(device);
+        // To avoid blocking the process
+        // This can be used as we saved the monitor in the object
+        drop(monitor.start_continuous_monitoring(device));
 
         Ok(self)
     }
@@ -165,3 +163,5 @@ impl BleDeviceManager {
         ReadOnlyBleLedDevice::try_from(self)
     }
 }
+
+unsafe impl Send for BleDeviceManager {}

@@ -1,9 +1,11 @@
-use elk_led_controller::VisualizationMode;
 use tokio::sync::Mutex;
 
 use tauri::State;
 
-use crate::tled::device::{manager::BleDeviceManager, serializer::ReadOnlyBleLedDevice};
+use crate::tled::{
+    audio_visualisation::serializer::ReadOnlyVisualizationMode,
+    device::{manager::BleDeviceManager, serializer::ReadOnlyBleLedDevice},
+};
 
 pub mod manager;
 pub mod serializer;
@@ -20,13 +22,13 @@ pub async fn device_init(
         return Err("Initialization failed.".into());
     }
 
-    Ok(device_manager.readonly()?)
+    device_manager.readonly()
 }
 
 #[tauri::command]
 pub async fn device_get(manager: ManagerState<'_>) -> Result<Option<ReadOnlyBleLedDevice>, ()> {
     let device_manager = manager.lock().await;
-    Ok(device_manager.readonly().map(|v| Some(v)).or(None))
+    Ok(device_manager.readonly().ok())
 }
 
 #[tauri::command]
@@ -50,7 +52,7 @@ pub async fn device_toggle(
         return Err("Failed to power on/off.".into());
     }
 
-    Ok(device_manager.readonly()?)
+    device_manager.readonly()
 }
 
 #[tauri::command]
@@ -64,7 +66,7 @@ pub async fn device_change_only(
     let mut device_manager = manager.lock().await;
     device_manager.change_single(r, g, b, a).await?;
 
-    Ok(device_manager.readonly()?)
+    device_manager.readonly()
 }
 
 #[tauri::command]
@@ -78,7 +80,7 @@ pub async fn device_change_all(
     let mut device_manager = manager.lock().await;
     device_manager.change_rgba(r, g, b, a).await?;
 
-    Ok(device_manager.readonly()?)
+    device_manager.readonly()
 }
 
 #[tauri::command]
@@ -90,19 +92,19 @@ pub async fn device_set_effect(
     let mut device_manager = manager.lock().await;
     device_manager.change_effect_settings(effect, speed).await?;
 
-    Ok(device_manager.readonly()?)
+    device_manager.readonly()
 }
 
 #[tauri::command]
 pub async fn device_use_audio(
     manager: ManagerState<'_>,
-    mode: Option<VisualizationMode>,
+    mode: Option<ReadOnlyVisualizationMode>,
     sensitivity: Option<u8>,
 ) -> Result<ReadOnlyBleLedDevice, String> {
     let mut device_manager = manager.lock().await;
     device_manager
-        .change_audio_monitor_settings(mode, sensitivity)
+        .change_audio_monitor_settings(mode.map(|v| v.into()), sensitivity)
         .await?;
 
-    Ok(device_manager.readonly()?)
+    device_manager.readonly()
 }

@@ -1,5 +1,5 @@
 use elk_led_controller::{AudioMonitor, FrequencyRange, VisualizationMode};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::tled::device::manager::BleDeviceManager;
 
@@ -26,7 +26,7 @@ impl From<FrequencyRange> for ReadOnlyFrequencyRange {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ReadOnlyVisualizationMode {
     /// Frequencies map to colors (bass=red, mid=green, high=blue)
     FrequencyColor,
@@ -51,6 +51,20 @@ impl From<VisualizationMode> for ReadOnlyVisualizationMode {
             VisualizationMode::SpectralFlow => Self::SpectralFlow,
             VisualizationMode::EnhancedFrequencyColor => Self::EnhancedFrequencyColor,
             VisualizationMode::BpmSync => Self::BpmSync,
+        }
+    }
+}
+impl From<ReadOnlyVisualizationMode> for VisualizationMode {
+    fn from(val: ReadOnlyVisualizationMode) -> Self {
+        match val {
+            ReadOnlyVisualizationMode::FrequencyColor => VisualizationMode::FrequencyColor,
+            ReadOnlyVisualizationMode::EnergyBrightness => VisualizationMode::EnergyBrightness,
+            ReadOnlyVisualizationMode::BeatEffects => VisualizationMode::BeatEffects,
+            ReadOnlyVisualizationMode::SpectralFlow => VisualizationMode::SpectralFlow,
+            ReadOnlyVisualizationMode::EnhancedFrequencyColor => {
+                VisualizationMode::EnhancedFrequencyColor
+            }
+            ReadOnlyVisualizationMode::BpmSync => VisualizationMode::BpmSync,
         }
     }
 }
