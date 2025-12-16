@@ -1,6 +1,8 @@
 use elk_led_controller::{AudioMonitor, FrequencyRange, VisualizationMode};
 use serde::Serialize;
 
+use crate::tled::device::manager::BleDeviceManager;
+
 #[derive(Debug, Clone, Serialize)]
 pub enum ReadOnlyFrequencyRange {
     /// Bass frequencies (20-250 Hz)
@@ -59,8 +61,8 @@ pub struct ReadOnlyAudioVisualization {
     pub range: ReadOnlyFrequencyRange,
     /// How to visualize audio
     pub mode: ReadOnlyVisualizationMode,
-    /// Audio volume sensitivity (0.0-1.0)
-    pub sensitivity: f32,
+    /// Audio volume sensitivity (0-255)
+    pub sensitivity: u8,
     /// Whether bass should trigger color changes
     pub bass_color_trigger: bool,
     /// Whether mids should trigger brightness changes
@@ -80,7 +82,7 @@ impl From<&AudioMonitor> for ReadOnlyAudioVisualization {
         Self {
             range: config.range.into(),
             mode: config.mode.into(),
-            sensitivity: config.sensitivity,
+            sensitivity: BleDeviceManager::from_0_100((config.sensitivity * 100.0) as u8),
             bass_color_trigger: config.bass_color_trigger,
             mid_brightness_trigger: config.mid_brightness_trigger,
             high_effect_trigger: config.high_effect_trigger,
