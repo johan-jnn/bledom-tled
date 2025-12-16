@@ -1,7 +1,13 @@
-use elk_led_controller::{BleLedDevice, Error};
+use elk_led_controller::{AudioMonitor, BleLedDevice, Error, VisualizationMode};
+
+use crate::tled::{
+    audio_visualisation::serializer::ReadOnlyAudioVisualization,
+    device::serializer::ReadOnlyBleLedDevice,
+};
 
 pub struct BleDeviceManager {
     pub device: Option<BleLedDevice>,
+    pub audio_monitor: Option<AudioMonitor>,
 }
 
 impl BleDeviceManager {
@@ -15,7 +21,10 @@ impl BleDeviceManager {
     }
 
     pub fn empty() -> Self {
-        Self { device: None }
+        Self {
+            device: None,
+            audio_monitor: None,
+        }
     }
 
     pub async fn init(&mut self, force: bool) -> Result<&mut Self, Error> {
@@ -114,5 +123,45 @@ impl BleDeviceManager {
 
     pub async fn change_rgba(&mut self, r: u8, g: u8, b: u8, a: u8) -> Result<&mut Self, String> {
         self.change_single(Some(r), Some(g), Some(b), Some(a)).await
+    }
+
+    pub async fn change_audio_monitor_settings(
+        &mut self,
+        mode: Option<VisualizationMode>,
+        sensitivity: Option<u8>,
+    ) -> Result<&mut Self, String> {
+        let device = self.device.as_mut().ok_or("Device not initialized.")?;
+
+        if self.audio_monitor.is_none() {
+            self.audio_monitor = Some(
+                AudioMonitor::new()
+                    .or(Err(String::from("Failed to create an audio monitor...")))?,
+            );
+        }
+        let monitor = self.audio_monitor.as_ref().unwrap();
+        let mut config = monitor.get_config();
+        if let Some(m) = mode {
+            config.mode = m
+        }
+        if let Some(s) = sensitivity {
+            config.sensitivity = (Self::to_0_100(s) as f32) / 100f32;
+        }
+        monitor.set_config(config);
+
+        monitor.start_continuous_monitoring(device);
+
+        Ok(self)
+    }
+    pub async fn stop_audio_monitoring(&mut self) -> &mut Self {
+        if let Some(monitor) = &self.audio_monitor {
+            monitor.stop();
+            self.audio_monitor = None
+        }
+
+        self
+    }
+
+    pub fn readonly(&self) -> Result<ReadOnlyBleLedDevice, String> {
+        ReadOnlyBleLedDevice::try_from(self)
     }
 }

@@ -1,10 +1,11 @@
 use elk_led_controller::BleLedDevice;
 use serde::Serialize;
 
-use crate::tled::device::manager::BleDeviceManager;
-// static DEVICE: Mutex<Option<BleLedDevice>> = Mutex::const_new(None);
+use crate::tled::{
+    audio_visualisation::serializer::ReadOnlyAudioVisualization, device::manager::BleDeviceManager,
+};
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, Clone)]
 pub struct ReadOnlyBleLedDevice {
     /// Current power state
     pub is_on: bool,
@@ -20,6 +21,9 @@ pub struct ReadOnlyBleLedDevice {
     pub color_temp_kelvin: Option<u32>,
     /// The device type name
     pub device_type_name: String,
+
+    /// If in use, the audio visualition setting
+    pub audio_config: Option<ReadOnlyAudioVisualization>,
 }
 
 impl From<&BleLedDevice> for ReadOnlyBleLedDevice {
@@ -32,6 +36,8 @@ impl From<&BleLedDevice> for ReadOnlyBleLedDevice {
             is_on: value.is_on,
             rgb_color: value.rgb_color,
             device_type_name: value.get_device_type_name().into(),
+            // If we only have the device, we cannot know the audio configuration
+            audio_config: None,
         }
     }
 }
@@ -47,7 +53,12 @@ impl TryFrom<&BleDeviceManager> for ReadOnlyBleLedDevice {
             return Err(String::from("Device not initialized."));
         };
 
-        Ok(device.into())
+        let mut readonly = ReadOnlyBleLedDevice::from(device);
+        if let Some(monitor) = &value.audio_monitor {
+            readonly.audio_config = Some(monitor.into());
+        }
+
+        Ok(readonly)
     }
 }
 impl TryFrom<&mut BleDeviceManager> for ReadOnlyBleLedDevice {
