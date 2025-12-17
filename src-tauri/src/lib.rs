@@ -17,6 +17,7 @@ pub fn run() {
             tled::device::device_change_all,
             tled::device::device_set_effect,
             tled::device::device_use_audio,
+            tled::device::device_default_audio_configuration
         ])
         .setup(|app| {
             app.manage(Mutex::new(BleDeviceManager::empty()));

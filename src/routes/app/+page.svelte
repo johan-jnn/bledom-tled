@@ -6,7 +6,8 @@
   import debounce from "debounce";
   import { TabItem, Tabs } from "flowbite-svelte";
   import { BuiltinEffects } from "../../types/builtin_effect";
-  import type { Device } from "../../types/device.js";
+  import type { Device, DeviceAudioVisualizer } from "../../types/device.js";
+  import { MusicVisualisationMode } from "../../types/music";
 
   const DEVICE_LOCALSTORAGE_KEY = "device_save";
 
@@ -68,6 +69,21 @@
         console.error
       );
     }
+  });
+
+  $effect(() => {
+    if (!(device.is_on && device._tab === "music")) return;
+    if (!device.audio_config) {
+      invoke("device_default_audio_configuration").then((json) => {
+        device.audio_config = json as DeviceAudioVisualizer;
+      });
+      return;
+    }
+
+    invoke("device_use_audio", {
+      mode: MusicVisualisationMode[device.audio_config.mode],
+      sensitivity: device.audio_config.sensitivity,
+    });
   });
 
   $effect(() => {
@@ -141,6 +157,9 @@
               type="range"
               name="speed"
               id="speed"
+              min="0"
+              max="255"
+              step="1"
               bind:value={
                 () => device.effect_speed,
                 debounce((v) => (device.effect_speed = v), 25)
@@ -158,6 +177,62 @@
                 {/if}
               {/each}
             </select>
+          </label>
+        </div>
+      </TabItem>
+
+      <TabItem title="Music Reactive" key="music">
+        <div class="pico">
+          <div class="container">
+            <h2>Warning</h2>
+            <p>
+              Apparently this does not work if you're using Jack or Pipewire
+              (without PulseAudio)
+            </p>
+            <p>
+              I'll make some investigations but for now it just does not work...
+            </p>
+          </div>
+
+          <hr>
+
+          <label for="mode">
+            Visualisation mode
+            <select
+              name="music_mode"
+              id="mode"
+              bind:value={
+                () => device.audio_config?.mode || 0,
+                (v) => device.audio_config && (device.audio_config.mode = v)
+              }
+            >
+              {#each Object.entries(MusicVisualisationMode) as [key, value] (key)}
+                {#if isNaN(parseInt(key))}
+                  <option {value}>{key}</option>
+                {/if}
+              {/each}
+            </select>
+          </label>
+
+          <label for="sensitivity">
+            Detection sensitivity
+            <input
+              type="range"
+              name="sensitivity"
+              id="sensitivity"
+              min="0"
+              max="255"
+              step="1"
+              bind:value={
+                () => device.audio_config?.sensitivity ?? 255 / 2,
+                debounce(
+                  (v) =>
+                    device.audio_config &&
+                    (device.audio_config.sensitivity = v),
+                  25
+                )
+              }
+            />
           </label>
         </div>
       </TabItem>

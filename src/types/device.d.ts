@@ -48,4 +48,9 @@ export interface Device {
    * The device type name
    */
   device_type_name: string;
+
+  /**
+   * The audio configuration of the device
+   */
+  audio_config?: DeviceAudioVisualizer;
 }

@@ -36,6 +36,8 @@ impl BleDeviceManager {
         effect: Option<u8>,
         speed: Option<u8>,
     ) -> Result<&mut Self, String> {
+        self.stop_audio_monitoring().await;
+
         let device = self
             .device
             .as_mut()
@@ -74,6 +76,8 @@ impl BleDeviceManager {
         b: Option<u8>,
         a: Option<u8>,
     ) -> Result<&mut Self, String> {
+        self.stop_audio_monitoring().await;
+
         let device = self
             .device
             .as_mut()
@@ -143,6 +147,7 @@ impl BleDeviceManager {
             config.sensitivity = (Self::to_0_100(s) as f32) / 100f32;
         }
         monitor.set_config(config);
+        monitor.set_active(true);
 
         // To avoid blocking the process
         // This can be used as we saved the monitor in the object

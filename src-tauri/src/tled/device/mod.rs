@@ -1,9 +1,10 @@
+use elk_led_controller::AudioMonitor;
 use tokio::sync::Mutex;
 
 use tauri::State;
 
 use crate::tled::{
-    audio_visualisation::serializer::ReadOnlyVisualizationMode,
+    audio_visualisation::serializer::{ReadOnlyAudioVisualization, ReadOnlyVisualizationMode},
     device::{manager::BleDeviceManager, serializer::ReadOnlyBleLedDevice},
 };
 
@@ -107,4 +108,21 @@ pub async fn device_use_audio(
         .await?;
 
     device_manager.readonly()
+}
+
+#[tauri::command]
+pub async fn device_default_audio_configuration(
+    state: ManagerState<'_>,
+) -> Result<ReadOnlyAudioVisualization, String> {
+    let device = state.lock().await;
+
+    let conf = if let Some(c) = device.audio_monitor.as_ref() {
+        c
+    } else {
+        &AudioMonitor::new().or(Err(String::from(
+            "Audio monitor not created and failed to use default.",
+        )))?
+    };
+
+    Ok(conf.into())
 }
