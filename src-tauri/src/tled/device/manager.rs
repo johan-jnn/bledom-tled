@@ -147,7 +147,6 @@ impl BleDeviceManager {
             config.sensitivity = (Self::to_0_100(s) as f32) / 100f32;
         }
         monitor.set_config(config);
-        monitor.set_active(true);
 
         // To avoid blocking the process
         // This can be used as we saved the monitor in the object
